@@ -1,0 +1,21 @@
+{
+  "name": "battleship",
+  "version": "1.0.0",
+  "description": "Battleship game",
+  "main": "server/index.js",
+  "devDependencies": {
+    "concurrently": "^3.4.0"
+  },
+  "scripts": {
+    "start": "concurrently \"nodemon server\" \"cd client && npm start\"",
+    "test": "mocha test"
+  },
+  "author": "Joshua Peng",
+  "license": "ISC",
+  "dependencies": {
+    "body-parser": "^1.17.1",
+    "express": "^4.15.2",
+    "mongodb": "^2.2.26",
+    "mongoose": "^4.9.7"
+  }
+}
