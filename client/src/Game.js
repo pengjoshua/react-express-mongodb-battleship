@@ -6,10 +6,11 @@ import Ships from './components/Ships';
 import Header from './components/Header';
 import './style.css';
 
-const carrierlen = 5;
-const battleshiplen = 4;
-const cruiserlen = 3;
-const submarinelen = 2;
+// constants for ship length
+const carrierlen = 6;
+const battleshiplen = 5;
+const cruiserlen = 4;
+const submarinelen = 3;
 const destroyerlen = 2;
 
 class Game extends Component {
@@ -17,7 +18,6 @@ class Game extends Component {
     super(props);
     this.state = {
       newGame: true,
-      allShipsPlaced: false,
       shipSelected: {
         carrier: false,
         battleship: false,
@@ -36,6 +36,7 @@ class Game extends Component {
       history: [{
         won: false,
         squares: Array(100).fill(0),
+        allShipsPlaced: false,
         allShips: [],
         shipPlaced: {
           carrier: false,
@@ -50,14 +51,17 @@ class Game extends Component {
   }
 
   componentDidMount() {
-    if (this.state.newGame) {
-      this.createGame();
-      // console.log(this.state);
-    }
+    if (this.state.newGame) this.createBoard();
   }
 
-  createGame() {
-    axios.post('/create-game')
+  // create a new 1x100 gameboard of 0s, can be modified to use a 10x10 array
+  createBoard() {
+
+    // /* to use a 10x10 array instead of 1x100 array */
+    // const board = Array(10).fill(Array(10).fill(0));
+    // axios.post('/create-board', {board: board})
+
+    axios.post('/create-board')
     .then((response) => {
       this.setState({
         newGame: false,
@@ -65,6 +69,7 @@ class Game extends Component {
           won: false,
           sunk: response.data.sunk,
           squares: response.data.board,
+          allShipsPlaced: false,
           allShips: [],
           shipPlaced: {
             carrier: false,
@@ -74,8 +79,6 @@ class Game extends Component {
             destroyer: false
           }
         }]
-      }, () => {
-        // console.log(this.state);
       });
     })
     .catch((error) => {
@@ -83,195 +86,90 @@ class Game extends Component {
     });
   }
 
+  // click handlers: clicking on the ships on the right to select a ship and toggle orientation
   handleCarrierClick(e) {
-    let vertical = (this.state.shipSelected.carrier) ? !this.state.vertical : true;
+    let vertical = (this.state.shipSelected.carrier) ? !this.state.vertical : this.state.vertical;
     this.setState({shipSelected: {carrier: true, battleship: false, cruiser: false, submarine: false, destroyer: false}, vertical: vertical});
   }
 
   handleBattleshipClick(e) {
-    let vertical = (this.state.shipSelected.battleship) ? !this.state.vertical : true;
+    let vertical = (this.state.shipSelected.battleship) ? !this.state.vertical : this.state.vertical;
     this.setState({shipSelected: {carrier: false, battleship: true, cruiser: false, submarine: false, destroyer: false}, vertical: vertical});
   }
 
   handleCruiserClick(e) {
-    let vertical = (this.state.shipSelected.cruiser) ? !this.state.vertical : true;
+    let vertical = (this.state.shipSelected.cruiser) ? !this.state.vertical : this.state.vertical;
     this.setState({shipSelected: {carrier: false, battleship: false, cruiser: true, submarine: false, destroyer: false}, vertical: vertical});
   }
 
   handleSubmarineClick(e) {
-    let vertical = (this.state.shipSelected.submarine) ? !this.state.vertical : true;
+    let vertical = (this.state.shipSelected.submarine) ? !this.state.vertical : this.state.vertical;
     this.setState({shipSelected: {carrier: false, battleship: false, cruiser: false, submarine: true, destroyer: false}, vertical: vertical});
   }
 
   handleDestroyerClick(e) {
-    let vertical = (this.state.shipSelected.destroyer) ? !this.state.vertical : true;
+    let vertical = (this.state.shipSelected.destroyer) ? !this.state.vertical : this.state.vertical;
     this.setState({shipSelected: {carrier: false, battleship: false, cruiser: false, submarine: false, destroyer: true}, vertical: vertical});
   }
 
-  placeShips(i) {
+  // create a new gameboard or use an existing gameboard and evaluate new ship placements
+  createGame(i) {
     const history = this.state.history.slice(0, this.state.stepNumber + 1);
     const current = history[history.length - 1];
     const squares = current.squares.slice();
-    const sunk = current.sunk.slice();
     let won = current.won;
     let allShips = current.allShips;
-    let carrier = [];
-    let battleship = [];
-    let cruiser = [];
-    let submarine = [];
-    let destroyer = [];
+    let allShipsPlaced;
     let carrierPlaced = current.shipPlaced.carrier;
     let battleshipPlaced = current.shipPlaced.battleship;
     let cruiserPlaced = current.shipPlaced.cruiser;
     let submarinePlaced = current.shipPlaced.submarine;
     let destroyerPlaced = current.shipPlaced.destroyer;
-
-    axios.get('/get-game')
+    let lastShipPlaced;
+    let ships = [];
+    let lens = [];
+    let verts = [];
+    if (this.state.shipSelected.carrier && !carrierPlaced) {
+      ships.push([toMatrix(i).row, toMatrix(i).col]);
+      lens.push(carrierlen);
+      verts.push(this.state.vertical);
+      lastShipPlaced = 'carrier';
+    } else if (this.state.shipSelected.battleship && !battleshipPlaced) {
+      ships.push([toMatrix(i).row, toMatrix(i).col]);
+      lens.push(battleshiplen);
+      verts.push(this.state.vertical);
+      lastShipPlaced = 'battleship';
+    } else if (this.state.shipSelected.cruiser && !cruiserPlaced) {
+      ships.push([toMatrix(i).row, toMatrix(i).col]);
+      lens.push(cruiserlen);
+      verts.push(this.state.vertical);
+      lastShipPlaced = 'cruiser';
+    } else if (this.state.shipSelected.submarine && !submarinePlaced) {
+      ships.push([toMatrix(i).row, toMatrix(i).col]);
+      lens.push(submarinelen);
+      verts.push(this.state.vertical);
+      lastShipPlaced = 'submarine';
+    } else if (this.state.shipSelected.destroyer && !destroyerPlaced) {
+      ships.push([toMatrix(i).row, toMatrix(i).col]);
+      lens.push(destroyerlen);
+      verts.push(this.state.vertical);
+      lastShipPlaced = 'destroyer';
+    }
+    axios.post('/create-game', {ships: ships, lens: lens, verts: verts, board: squares})
     .then((response) => {
-      if (this.state.shipSelected.carrier && !carrierPlaced) {
-        if (this.state.vertical && toMatrix(i).row + carrierlen < 10) {
-          for (let k = 0; k < carrierlen; k++) {
-            if (allShips.indexOf(i + (k * 10)) !== -1) {
-              carrier = [];
-              break;
-            }
-            else carrier.push(i + (k * 10));
-          }
-        }
-        else if (!this.state.vertical && toMatrix(i).col + carrierlen <= 10) {
-          for (let k = 0; k < carrierlen; k++) {
-            if (allShips.indexOf(i + k) !== -1) {
-              carrier = [];
-              break;
-            }
-            else carrier.push(i + k);
-          }
-        }
-        if (carrier.length > 0) {
-          carrier.forEach((pos) => {
-            squares[pos] = 1;
-            allShips.push(pos);
-          });
-          carrierPlaced = true;
-        }
-      } else if (this.state.shipSelected.battleship && !battleshipPlaced) {
-        if (this.state.vertical && toMatrix(i).row + battleshiplen <= 10) {
-          for (let k = 0; k < battleshiplen; k++) {
-            if (allShips.indexOf(i + (k * 10)) !== -1) {
-              battleship = [];
-              break;
-            }
-            else battleship.push(i + (k * 10));
-          }
-        }
-        else if (!this.state.vertical && toMatrix(i).col + battleshiplen <= 10) {
-          for (let k = 0; k < battleshiplen; k++) {
-            if (allShips.indexOf(i + k) !== -1) {
-              battleship = [];
-              break;
-            }
-            else battleship.push(i + k);
-          }
-        }
-        if (battleship.length > 0) {
-          battleship.forEach((pos) => {
-            squares[pos] = 2;
-            allShips.push(pos);
-          });
-          battleshipPlaced = true;
-        }
-      } else if (this.state.shipSelected.cruiser && !cruiserPlaced) {
-        if (this.state.vertical && toMatrix(i).row + cruiserlen <= 10) {
-          for (let k = 0; k < cruiserlen; k++) {
-            if (allShips.indexOf(i + (k * 10)) !== -1) {
-              cruiser = [];
-              break;
-            }
-            else cruiser.push(i + (k * 10));
-          }
-        }
-        else if (!this.state.vertical && toMatrix(i).col + cruiserlen <= 10) {
-          for (let k = 0; k < cruiserlen; k++) {
-            if (allShips.indexOf(i + k) !== -1) {
-              cruiser = [];
-              break;
-            }
-            else cruiser.push(i + k);
-          }
-        }
-        if (cruiser.length > 0) {
-          cruiser.forEach((pos) => {
-            squares[pos] = 3;
-            allShips.push(pos);
-          });
-          cruiserPlaced = true;
-        }
-      } else if (this.state.shipSelected.submarine && !submarinePlaced) {
-        if (this.state.vertical && toMatrix(i).row + submarinelen <= 10) {
-          for (let k = 0; k < submarinelen; k++) {
-            if (allShips.indexOf(i + (k * 10)) !== -1) {
-              submarine = [];
-              break;
-            }
-            else submarine.push(i + (k * 10));
-          }
-        }
-        else if (!this.state.vertical && toMatrix(i).col + submarinelen <= 10) {
-          for (let k = 0; k < submarinelen; k++) {
-            if (allShips.indexOf(i + k) !== -1) {
-              submarine = [];
-              break;
-            }
-            else submarine.push(i + k);
-          }
-        }
-        if (submarine.length > 0) {
-          submarine.forEach((pos) => {
-            squares[pos] = 4;
-            allShips.push(pos);
-          });
-          submarinePlaced = true;
-        }
-      } else if (this.state.shipSelected.destroyer && !destroyerPlaced) {
-        if (this.state.vertical && toMatrix(i).row + destroyerlen <= 10) {
-          for (let k = 0; k < destroyerlen; k++) {
-            if (allShips.indexOf(i + (k * 10)) !== -1) {
-              destroyer = [];
-              break;
-            }
-            else destroyer.push(i + (k * 10));
-          }
-        }
-        else if (!this.state.vertical && toMatrix(i).col + destroyerlen <= 10) {
-          for (let k = 0; k < destroyerlen; k++) {
-            if (allShips.indexOf(i + k) !== -1) {
-              destroyer = [];
-              break;
-            }
-            else destroyer.push(i + k);
-          }
-        }
-        if (destroyer.length > 0) {
-          destroyer.forEach((pos) => {
-            squares[pos] = 5;
-            allShips.push(pos);
-          });
-          destroyerPlaced = true;
-        }
-      }
+      if (response.status !== 400 && lastShipPlaced === 'carrier') carrierPlaced = true;
+      if (response.status !== 400 && lastShipPlaced === 'battleship') battleshipPlaced = true;
+      if (response.status !== 400 && lastShipPlaced === 'cruiser') cruiserPlaced = true;
+      if (response.status !== 400 && lastShipPlaced === 'submarine') submarinePlaced = true;
+      if (response.status !== 400 && lastShipPlaced === 'destroyer') destroyerPlaced = true;
+      allShipsPlaced = (carrierPlaced && battleshipPlaced && cruiserPlaced && submarinePlaced && destroyerPlaced) ? true : false;
       this.setState({
-        ships: {
-          carrier: carrier,
-          battleship: battleship,
-          cruiser: cruiser,
-          submarine: submarine,
-          destroyer: destroyer
-        },
         history: history.concat([{
           won: won,
-          sunk: sunk,
-          squares: squares,
+          sunk: response.data.sunk,
+          squares: response.data.board,
           allShips: allShips,
+          allShipsPlaced: allShipsPlaced,
           shipPlaced: {
             carrier: carrierPlaced,
             battleship: battleshipPlaced,
@@ -282,7 +180,6 @@ class Game extends Component {
         }]),
         stepNumber: history.length,
       }, () => {
-        // console.log(this.state);
         this.saveGame(i);
       });
     })
@@ -291,6 +188,15 @@ class Game extends Component {
     });
   }
 
+  // evaluates shots, returns a msg of 'hit', 'miss', 'sunk', or 'won'
+  // also returns the current gameboard, shot value, and sunk array (sunk ships)
+  // value:
+  // 0: water
+  // 1 - 10: ships
+  // 11: miss
+  // 12: hit
+  // 13: sunk
+  // 14: won
   makeMove(i) {
     const history = this.state.history.slice(0, this.state.stepNumber + 1);
     const current = history[history.length - 1];
@@ -304,7 +210,6 @@ class Game extends Component {
     let destroyerPlaced = current.shipPlaced.destroyer;
     axios.post('/make-move', {shot: i})
     .then((response) => {
-      // console.log(response.data);
       console.log(response.data.msg);
       won = (response.data.msg === 'won') ? true : false;
       this.setState({
@@ -332,20 +237,46 @@ class Game extends Component {
     });
   }
 
+  // save current gameboard
   saveGame(i) {
     const history = this.state.history.slice(0, this.state.stepNumber + 1);
     const current = history[history.length - 1];
     const squares = current.squares.slice();
     const sunk = current.sunk.slice();
+    let allShips = current.allShips;
+    let won = current.won;
+    let allShipsPlaced = current.allShipsPlaced;
+    let carrierPlaced = current.shipPlaced.carrier;
+    let battleshipPlaced = current.shipPlaced.battleship;
+    let cruiserPlaced = current.shipPlaced.cruiser;
+    let submarinePlaced = current.shipPlaced.submarine;
+    let destroyerPlaced = current.shipPlaced.destroyer;
     axios.post('/save-game', {board: squares, sunk: sunk})
     .then((response) => {
-
+      this.setState({
+        history: history.concat([{
+          won: won,
+          sunk: response.data.sunk,
+          squares: response.data.board,
+          allShipsPlaced: allShipsPlaced,
+          allShips: allShips,
+          shipPlaced: {
+            carrier: carrierPlaced,
+            battleship: battleshipPlaced,
+            cruiser: cruiserPlaced,
+            submarine: submarinePlaced,
+            destroyer: destroyerPlaced
+          }
+        }]),
+        stepNumber: history.length,
+      });
     })
     .catch((error) => {
       console.log(error);
     });
   }
 
+  // handles all mouse clicks when placing ships and shooting ships
   handleClick(i) {
     const history = this.state.history.slice(0, this.state.stepNumber + 1);
     const current = history[history.length - 1];
@@ -358,50 +289,11 @@ class Game extends Component {
     let cruiserPlaced = current.shipPlaced.cruiser;
     let submarinePlaced = current.shipPlaced.submarine;
     let destroyerPlaced = current.shipPlaced.destroyer;
-    if (current.allShipsPlaced && !current.won) {
+    if (current.allShipsPlaced && !current.won && Object.values(this.state.shipSelected).some(x => x === true)) {
       this.makeMove(i);
-    } else if (!current.allShipsPlaced && !current.won) {
-      this.placeShips(i);
+    } else if (!current.allShipsPlaced && !current.won && Object.values(this.state.shipSelected).some(x => x === true)) {
+      this.createGame(i);
     } else if (this.state.won) {
-      this.setState({
-        history: history.concat([{
-          won: won,
-          sunk: sunk,
-          squares: squares,
-          allShipsPlaced: true,
-          allShips: allShips,
-          shipPlaced: {
-            carrier: carrierPlaced,
-            battleship: battleshipPlaced,
-            cruiser: cruiserPlaced,
-            submarine: submarinePlaced,
-            destroyer: destroyerPlaced
-          }
-        }]),
-        stepNumber: history.length,
-      }, () => {
-
-      })
-    }
-  }
-
-  jumpTo(step) {
-    this.setState({stepNumber: step});
-  }
-
-  handleStartClick() {
-    const history = this.state.history.slice(0, this.state.stepNumber + 1);
-    const current = history[history.length - 1];
-    let allShips = current.allShips;
-    let won = current.won;
-    let sunk = current.sunk.slice();
-    let squares = current.squares.slice();
-    let carrierPlaced = current.shipPlaced.carrier;
-    let battleshipPlaced = current.shipPlaced.battleship;
-    let cruiserPlaced = current.shipPlaced.cruiser;
-    let submarinePlaced = current.shipPlaced.submarine;
-    let destroyerPlaced = current.shipPlaced.destroyer;
-    if (current.allShips.length === carrierlen + battleshiplen + cruiserlen + submarinelen + destroyerlen) {
       this.setState({
         history: history.concat([{
           won: won,
@@ -422,6 +314,12 @@ class Game extends Component {
     }
   }
 
+  // reverts state back in time to a specific move number
+  jumpTo(step) {
+    this.setState({stepNumber: step});
+  }
+
+  // reinitialize app and restart game
   handleRestartClick() {
     this.setState({
       newGame: true,
@@ -445,6 +343,7 @@ class Game extends Component {
         won: false,
         squares: Array(100).fill(0),
         allShips: [],
+        allShipsPlaced: false,
         shipPlaced: {
           carrier: false,
           battleship: false,
@@ -455,7 +354,7 @@ class Game extends Component {
       }],
       stepNumber: 0,
     }, () => {
-      this.createGame();
+      this.createBoard();
     });
   }
 
@@ -467,29 +366,29 @@ class Game extends Component {
     else if (!current.allShipsPlaced && !current.won) phase = (
       <div>
         <h5>Place ships on board</h5>
-        <p>The highlighted cell indicates the topmost/leftmost ship cell</p>
+        <p>The highlighted cell will be the ship's topmost(vertical) or leftmost(horizontal) cell</p>
       </div>
     );
-    else if (current.won) phase = <div><h5>Congratulations! You have sunk all the ships!</h5></div>;
+    else if (current.won) phase = <div className="congrats"><h5>Congratulations! You have sunk all the ships!</h5></div>;
 
     let orientation = (this.state.vertical && !current.allShipsPlaced) ?
       <div>
-        <h5>Ship orientation: Vertical</h5>
+        <h5>Ship orientation: <strong>vertical</strong></h5>
         <p>Click ship to select ship and toggle orientation</p>
       </div> :
       <div>
-        <h5>Ship orientation: Horizontal</h5>
+        <h5>Ship orientation: <strong>horizontal</strong></h5>
         <p>Click ship to select ship and toggle orientation</p>
       </div>;
 
     let startButton = (current.won) ?
     <div>
-      <p>To clear the board and restart, press Restart!</p>
-      <Button className="start" onClick={() => this.handleRestartClick()}>Restart</Button>
+      <p>To clear the board and start over, press Restart!</p>
+      <Button className="restart" onClick={() => this.handleRestartClick()}>Restart</Button>
     </div> :
     <div>
-      <p>When you have finished placing ships on the board, press Start!</p>
-      <Button className="start" onClick={() => this.handleStartClick()}>Start</Button>
+      <p>When you have finished placing ships on the board, Battleship will automatically Start!</p>
+      {/* <Button className="start" onClick={() => this.handleStartClick()}>Start</Button> */}
     </div>
 
     const moves = history.map((step, move) => {
@@ -506,7 +405,7 @@ class Game extends Component {
         <Header />
         <Grid>
           <Row>
-            <Col xs={6} md={6} lg={6}>
+            <Col xs={7} md={7} lg={7}>
               <div className="game-board">
                 {phase}
                 <Board
@@ -523,10 +422,15 @@ class Game extends Component {
                 <ol>{moves}</ol>
               </div>
             </Col>
-            <Col xs={6} md={6} lg={6}>
+            <Col xs={5} md={5} lg={5}>
               {orientation}
               <div className="game-board">
                 <Ships
+                  carrierlen={carrierlen}
+                  battleshiplen={battleshiplen}
+                  cruiserlen={cruiserlen}
+                  submarinelen={submarinelen}
+                  destroyerlen={destroyerlen}
                   vertical={this.state.vertical}
                   shipPlaced={current.shipPlaced}
                   shipSelected={this.state.shipSelected}
@@ -553,7 +457,3 @@ function toMatrix(i) {
     col: i % 10
   };
 }
-
-// function toArray(i, j) {
-//   return (i * 10) + j;
-// }
