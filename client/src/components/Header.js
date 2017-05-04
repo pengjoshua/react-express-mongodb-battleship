@@ -7,7 +7,7 @@ class Header extends Component {
       <Navbar>
         <Navbar.Header>
           <Navbar.Brand>
-            Battleship
+            <strong>Battleship</strong>
           </Navbar.Brand>
         </Navbar.Header>
       </Navbar>

@@ -71,7 +71,7 @@
 .hit {
   width: 35px;
   height: 35px;
-  background-color: #cc0038;
+  background-color: #ff4d4d;
   border-color: #cc0038;
 }
 
@@ -87,4 +87,32 @@
   height: 35px;
   background-color: #ffbf00;
   border-color: #ffbf00;
+}
+
+.miss-label {
+  width: calc(35px * 10);
+  text-align: center;
+  background-color: #e6ecff;
+  color: #9999ff;
+}
+
+.hit-label {
+  width: calc(35px * 10);
+  text-align: center;
+  background-color: #ffcccc;
+  color: #ff4d4d;
+}
+
+.sunk-label {
+  width: calc(35px * 10);
+  text-align: center;
+  background-color: #f5f5f5;
+  color: #666;
+}
+
+.won-label {
+  width: calc(35px * 10);
+  text-align: center;
+  background-color: #fff5cc;
+  color: #ffbf00;
 }

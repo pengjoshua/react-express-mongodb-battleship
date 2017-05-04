@@ -34,6 +34,7 @@ class Game extends Component {
       },
       vertical: true,
       history: [{
+        msg: '',
         won: false,
         squares: Array(100).fill(0),
         allShipsPlaced: false,
@@ -66,6 +67,7 @@ class Game extends Component {
       this.setState({
         newGame: false,
         history: [{
+          msg: '',
           won: false,
           sunk: response.data.sunk,
           squares: response.data.board,
@@ -171,6 +173,7 @@ class Game extends Component {
       allShipsPlaced = (carrierPlaced && battleshipPlaced && cruiserPlaced && submarinePlaced && destroyerPlaced) ? true : false;
       this.setState({
         history: history.concat([{
+          msg: current.msg,
           won: won,
           sunk: response.data.sunk,
           squares: response.data.board,
@@ -220,6 +223,7 @@ class Game extends Component {
       won = (response.data.msg === 'won') ? true : false;
       this.setState({
         history: history.concat([{
+          msg: response.data.msg,
           won: won,
           sunk: response.data.sunk,
           squares: response.data.board,
@@ -261,6 +265,7 @@ class Game extends Component {
     .then((response) => {
       this.setState({
         history: history.concat([{
+          msg: current.msg,
           won: won,
           sunk: response.data.sunk,
           squares: response.data.board,
@@ -302,6 +307,7 @@ class Game extends Component {
     } else if (this.state.won) {
       this.setState({
         history: history.concat([{
+          msg: current.msg,
           won: won,
           sunk: sunk,
           squares: squares,
@@ -346,6 +352,7 @@ class Game extends Component {
       },
       vertical: true,
       history: [{
+        msg: '',
         won: false,
         squares: Array(100).fill(0),
         allShips: [],
@@ -368,14 +375,16 @@ class Game extends Component {
     const history = this.state.history;
     const current = history[this.state.stepNumber];
     let phase;
-    if (current.allShipsPlaced && !current.won) phase = <div className="shootships"><h5>Take shots to sink ships!</h5></div>;
-    else if (!current.allShipsPlaced && !current.won) phase = (
-      <div>
-        <h5>Place ships on board</h5>
-        <p>The highlighted cell will be the ship's topmost(vertical) or leftmost(horizontal) cell</p>
-      </div>
-    );
-    else if (current.won) phase = <div className="congrats"><h5>Congratulations! You have sunk all the ships!</h5></div>;
+    if (current.allShipsPlaced && !current.won) {
+      phase = <div className="shootships"><h5>Take shots to sink ships!</h5></div>;
+    } else if (!current.allShipsPlaced && !current.won) {
+      phase = (
+        <div>
+          <h5>Place ships on board</h5>
+          <p>Place ship from the top (vertical) or left (horizontal) cell</p>
+        </div>
+      );
+    } else if (current.won) phase = <div className="congrats"><h5>Congratulations! You have sunk all the ships!</h5></div>;
 
     let orientation = (this.state.vertical && !current.allShipsPlaced) ?
       <div>
@@ -387,15 +396,26 @@ class Game extends Component {
         <p>Click ship to select ship and toggle orientation</p>
       </div>;
 
-    let startButton = (current.won) ?
-    <div className="winner">
-      <p>To clear the board and start over, press Restart!</p>
-      <Button className="restart" onClick={() => this.handleRestartClick()}>Restart</Button>
-    </div> :
-    <div className="placeships">
-      <p>When you have finished placing ships on the board, Battleship will automatically Start!</p>
-      {/* <Button className="start" onClick={() => this.handleStartClick()}>Start</Button> */}
-    </div>
+    let startButton;
+    if (current.allShipsPlaced && !current.won) {
+      if (current.msg === 'miss') startButton = <div className="labelships"><h5 className="miss-label"><strong>miss</strong></h5></div>;
+      else if (current.msg === 'hit') startButton = <div className="labelships"><h5 className="hit-label"><strong>hit</strong></h5></div>;
+      else if (current.msg === 'sunk') startButton = <div className="labelships"><h5 className="sunk-label"><strong>sunk</strong></h5></div>;
+    } else if (!current.allShipsPlaced && !current.won) {
+      startButton = (
+        <div className="placeships">
+          <p>Battleship will automatically start when all ships placed on the board</p>
+        </div>
+      );
+    } else if (current.won) {
+      startButton = (
+        <div className="winner">
+          <div className="labelships"><h5 className="won-label"><strong>won</strong></h5></div>
+          <p>Press Restart to clear the board and start over</p>
+          <Button className="restart" onClick={() => this.handleRestartClick()}>Restart</Button>
+        </div>
+      );
+    }
 
     const moves = history.map((step, move) => {
       const desc = move ? 'Move #' + move : 'Game start';
@@ -411,7 +431,7 @@ class Game extends Component {
         <Header />
         <Grid>
           <Row>
-            <Col xs={7} md={7} lg={7}>
+            <Col xs={6} md={6} lg={6}>
               <div className="game-board">
                 {phase}
                 <Board
@@ -423,12 +443,11 @@ class Game extends Component {
               <div className="game-info">
                 <br />
                 {startButton}
-                <br />
-                <h6>Move History</h6>
+                <h6><strong>Move History</strong></h6>
                 <ol>{moves}</ol>
               </div>
             </Col>
-            <Col xs={5} md={5} lg={5}>
+            <Col xs={6} md={6} lg={6}>
               {orientation}
               <div className="game-ships">
                 <Ships
