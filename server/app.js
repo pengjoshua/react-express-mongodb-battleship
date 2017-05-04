@@ -37,13 +37,15 @@ app.post('/create-board', (req, res) => {
 app.post('/create-game', (req, res) => {
   let ships = req.body.ships;
   let lens = req.body.lens;
+  let values = req.body.values;
   let verts = req.body.verts;
   let board = (req.body.board) ? req.body.board : Array(100).fill(0);
-  if (!req.body.ships || !req.body.lens || !req.body.verts) return res.status(400).send('missing inputs');
+  if (!req.body.ships || !req.body.lens || !req.body.verts || !req.body.values) return res.status(400).send('missing inputs');
   if (ships[0].constructor !== Array) return res.status(400).send('ships input not a 2D array');
   if (!Array.isArray(lens)) return res.status(400).send('lens input not an array');
   if (!Array.isArray(verts)) return res.status(400).send('verts input not an array');
-  if (ships.length !== lens.length || lens.length !== verts.length || verts.length !== ships.length) return res.status(400).send('mismatched inputs');
+  if (!Array.isArray(values)) return res.status(400).send('values input not an array');
+  if (ships.length !== lens.length || ships.length !== verts.length || ships.length !== ships.length || ships.length !== values.length) return res.status(400).send('mismatched inputs');
 
   ships.forEach((ship, i) => {
     if (toIndex(ship) < 0 || toIndex(ship) > 99) return res.status(400).send('ship off board');
@@ -53,11 +55,11 @@ app.post('/create-game', (req, res) => {
       if (verts[i]) {
         if (ship[0] + k > 9) return res.status(400).send('vertically oriented ship does not fully fit on board');
         if (board[toIndex([ship[0] + k, ship[1]])] !== 0) return res.status(400).send('cell contains ship');
-        board[toIndex([ship[0] + k, ship[1]])] = lens[i];
+        board[toIndex([ship[0] + k, ship[1]])] = values[i];
       } else if (!verts[i]) {
         if (ship[1] + k > 9) return res.status(400).send('horizontally oriented ship does not fully fit on board');
         if (board[toIndex(ship) + k] !== 0) return res.status(400).send('cell contains ship');
-        board[toIndex(ship) + k] = lens[i];
+        board[toIndex(ship) + k] = values[i];
       }
     }
   });
@@ -93,51 +95,46 @@ app.post('/save-game', (req, res) => {
 // value:
 // 0: water
 // 1 - 10: ships
-// 11: miss
-// 12: hit
-// 13: sunk
-// 14: won
+// 77: miss
+// 11 - 20: hit
+// 88: sunk
+// 99: won
 app.post('/make-move', (req, res) => {
   Battleship.find().then((result) => {
     let board = result[result.length - 1].board.slice();
     let sunk = result[result.length - 1].sunk.slice();
     if (!req.body.shot) return res.status(400).send('missing shot coordinates');
     let i;
-    if (Array.isArray(req.body.shot)) {
+    if (req.body.shot.length === 2) {
       if (req.body.shot[0] < 0 || req.body.shot[0] > 99 || req.body.shot[1] < 0 || req.body.shot[1] > 99) return res.status(400).send('shot off of board');
       i = toIndex(req.body.shot);
-    } else if (typeof req.body.shot === 'number') {
-      if (req.body.shot < 0 || req.body.shot > 99) return res.status(400).send('shot off of board');
-      i = req.body.shot;
-    } else {
-      return res.status(400).send('invalid shot input');
-    }
+    } else if (req.body.shot.length === 1) {
+      if (req.body.shot[0] < 0 || req.body.shot[0] > 99) return res.status(400).send('shot off of board');
+      i = req.body.shot[0];
+    } else if (!Array.isArray(req.body.shot)) return res.status(400).send('invalid shot input');
 
     let msg;
     let value;
-    let lastHit;
     let ships = [...Array(10)].map((v, k) => k + 1);
     if (board[i] === 0) {
       msg = 'miss';
-      board[i] = 11;
-      value = 11;
+      board[i] = 77;
+      value = 77;
     } else if (board[i] > 0 && board[i] < 11) {
       msg = 'hit';
-      lastHit = board[i];
-      board[i] = 12;
-      value = 12;
-      ships.forEach((ship) => {
-        if (board.reduce((a, e, k) => (e === ship) ? a.concat(k) : a, []).length === 0 && sunk.indexOf(ship) === -1 && board.indexOf(lastHit) === -1) {
-          msg = 'sunk';
-          sunk.push(ship);
-          board = board.map((item) => item === 12 ? 13 : item);
-          value = 13;
-        }
-      });
-      if (board.reduce((a, e, k) => (e !== 0 && e !== 11 && e !== 13) ? a.concat(k) : a, []).length === 0){
+      const lastHit = board[i];
+      board[i] += 10;
+      value = board[i];
+      if (sunk.indexOf(lastHit) === -1 && board.indexOf(lastHit) === -1) {
+        msg = 'sunk';
+        sunk.push(lastHit);
+        board = board.map((item) => item === (lastHit + 10) ? 88 : item);
+        value = 88;
+      }
+      if (board.reduce((a, e, k) => (e !== 0 && e !== 77 && e !== 88) ? a.concat(k) : a, []).length === 0){
         msg = 'won';
-        board = board.map((item) => item === 13 ? 14 : item);
-        value = 14;
+        board = board.map((item) => item === 88 ? 99 : item);
+        value = 99;
       }
     }
     if (res.headersSent) return;

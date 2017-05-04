@@ -129,33 +129,39 @@ class Game extends Component {
     let ships = [];
     let lens = [];
     let verts = [];
+    let values = [];
     if (this.state.shipSelected.carrier && !carrierPlaced) {
       ships.push([toMatrix(i).row, toMatrix(i).col]);
       lens.push(carrierlen);
       verts.push(this.state.vertical);
+      values.push(1);
       lastShipPlaced = 'carrier';
     } else if (this.state.shipSelected.battleship && !battleshipPlaced) {
       ships.push([toMatrix(i).row, toMatrix(i).col]);
       lens.push(battleshiplen);
       verts.push(this.state.vertical);
+      values.push(2);
       lastShipPlaced = 'battleship';
     } else if (this.state.shipSelected.cruiser && !cruiserPlaced) {
       ships.push([toMatrix(i).row, toMatrix(i).col]);
       lens.push(cruiserlen);
       verts.push(this.state.vertical);
+      values.push(3);
       lastShipPlaced = 'cruiser';
     } else if (this.state.shipSelected.submarine && !submarinePlaced) {
       ships.push([toMatrix(i).row, toMatrix(i).col]);
       lens.push(submarinelen);
       verts.push(this.state.vertical);
+      values.push(4);
       lastShipPlaced = 'submarine';
     } else if (this.state.shipSelected.destroyer && !destroyerPlaced) {
       ships.push([toMatrix(i).row, toMatrix(i).col]);
       lens.push(destroyerlen);
       verts.push(this.state.vertical);
+      values.push(5);
       lastShipPlaced = 'destroyer';
     }
-    axios.post('/create-game', {ships: ships, lens: lens, verts: verts, board: squares})
+    axios.post('/create-game', {ships: ships, lens: lens, verts: verts, values: values, board: squares})
     .then((response) => {
       if (response.status !== 400 && lastShipPlaced === 'carrier') carrierPlaced = true;
       if (response.status !== 400 && lastShipPlaced === 'battleship') battleshipPlaced = true;
@@ -193,10 +199,10 @@ class Game extends Component {
   // value:
   // 0: water
   // 1 - 10: ships
-  // 11: miss
-  // 12: hit
-  // 13: sunk
-  // 14: won
+  // 77: miss
+  // 11 - 20: hit
+  // 88: sunk
+  // 99: won
   makeMove(i) {
     const history = this.state.history.slice(0, this.state.stepNumber + 1);
     const current = history[history.length - 1];
@@ -208,7 +214,7 @@ class Game extends Component {
     let cruiserPlaced = current.shipPlaced.cruiser;
     let submarinePlaced = current.shipPlaced.submarine;
     let destroyerPlaced = current.shipPlaced.destroyer;
-    axios.post('/make-move', {shot: i})
+    axios.post('/make-move', {shot: [i]})
     .then((response) => {
       console.log(response.data.msg);
       won = (response.data.msg === 'won') ? true : false;
@@ -362,7 +368,7 @@ class Game extends Component {
     const history = this.state.history;
     const current = history[this.state.stepNumber];
     let phase;
-    if (current.allShipsPlaced && !current.won) phase = <div><h5>Take shots to sink ships!</h5></div>;
+    if (current.allShipsPlaced && !current.won) phase = <div className="shootships"><h5>Take shots to sink ships!</h5></div>;
     else if (!current.allShipsPlaced && !current.won) phase = (
       <div>
         <h5>Place ships on board</h5>
@@ -382,11 +388,11 @@ class Game extends Component {
       </div>;
 
     let startButton = (current.won) ?
-    <div>
+    <div className="winner">
       <p>To clear the board and start over, press Restart!</p>
       <Button className="restart" onClick={() => this.handleRestartClick()}>Restart</Button>
     </div> :
-    <div>
+    <div className="placeships">
       <p>When you have finished placing ships on the board, Battleship will automatically Start!</p>
       {/* <Button className="start" onClick={() => this.handleStartClick()}>Start</Button> */}
     </div>
@@ -395,7 +401,7 @@ class Game extends Component {
       const desc = move ? 'Move #' + move : 'Game start';
       return (
         <li key={move}>
-          <a href="#" onClick={() => this.jumpTo(move)}>{desc}</a>
+          <a id={'move' + move} href="#" onClick={() => this.jumpTo(move)}>{desc}</a>
         </li>
       );
     });
@@ -424,7 +430,7 @@ class Game extends Component {
             </Col>
             <Col xs={5} md={5} lg={5}>
               {orientation}
-              <div className="game-board">
+              <div className="game-ships">
                 <Ships
                   carrierlen={carrierlen}
                   battleshiplen={battleshiplen}

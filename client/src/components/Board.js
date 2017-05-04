@@ -5,6 +5,7 @@ class Board extends Component {
   renderSquare(i) {
     return (
       <Square
+        id={i}
         allShipsPlaced={this.props.allShipsPlaced}
         value={this.props.squares[i]}
         onClick={() => this.props.onClick(i)}
