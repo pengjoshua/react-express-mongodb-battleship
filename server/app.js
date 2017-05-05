@@ -41,6 +41,7 @@ app.post('/create-game', (req, res) => {
   let verts = req.body.verts;
   let board = (req.body.board) ? req.body.board : Array(100).fill(0);
   if (!req.body.ships || !req.body.lens || !req.body.verts || !req.body.values) return res.status(400).send('missing inputs');
+  if (res.headersSent) return;
   if (ships[0].constructor !== Array) return res.status(400).send('ships input not a 2D array');
   if (!Array.isArray(lens)) return res.status(400).send('lens input not an array');
   if (!Array.isArray(verts)) return res.status(400).send('verts input not an array');

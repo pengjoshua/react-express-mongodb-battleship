@@ -4,7 +4,8 @@ import axios from 'axios';
 import Board from './components/Board';
 import Ships from './components/Ships';
 import Header from './components/Header';
-import './style.css';
+import Footer from './components/Footer';
+import '../public/style.css';
 
 // constants for ship length
 const carrierlen = 6;
@@ -381,7 +382,7 @@ class Game extends Component {
       phase = (
         <div>
           <h5>Place ships on board</h5>
-          <p>Place ship from the top (vertical) or left (horizontal) cell</p>
+          <p>Place ships by their topmost (vertical) or leftmost (horizontal) cell</p>
         </div>
       );
     } else if (current.won) phase = <div className="congrats"><h5>Congratulations! You have sunk all the ships!</h5></div>;
@@ -429,9 +430,9 @@ class Game extends Component {
     return (
       <div className="game">
         <Header />
-        <Grid>
+        <Grid className="game-grid">
           <Row>
-            <Col xs={6} md={6} lg={6}>
+            <Col className="game-col" xs={12} md={6} lg={6}>
               <div className="game-board">
                 {phase}
                 <Board
@@ -439,17 +440,13 @@ class Game extends Component {
                   squares={current.squares}
                   onClick={(i) => this.handleClick(i)}
                 />
-              </div>
-              <div className="game-info">
                 <br />
                 {startButton}
-                <h6><strong>Move History</strong></h6>
-                <ol>{moves}</ol>
               </div>
             </Col>
-            <Col xs={6} md={6} lg={6}>
-              {orientation}
+            <Col className="game-col" xs={12} md={6} lg={6}>
               <div className="game-ships">
+                {orientation}
                 <Ships
                   carrierlen={carrierlen}
                   battleshiplen={battleshiplen}
@@ -467,8 +464,15 @@ class Game extends Component {
                 />
               </div>
             </Col>
+            <Col className="game-col" xs={12} md={12} lg={12}>
+              <div className="game-info">
+                <h6><strong>Move History</strong></h6>
+                <ol>{moves}</ol>
+              </div>
+            </Col>
           </Row>
         </Grid>
+        <Footer />
       </div>
     );
   }

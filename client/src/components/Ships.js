@@ -13,11 +13,11 @@ function Ships(props) {
   (
     <Grid>
       <Row>
-        <Col xs={1} md={1} lg={1}>{carrier}</Col>
-        <Col xs={1} md={1} lg={1}>{battleship}</Col>
-        <Col xs={1} md={1} lg={1}>{cruiser}</Col>
-        <Col xs={1} md={1} lg={1}>{submarine}</Col>
-        <Col xs={1} md={1} lg={1}>{destroyer}</Col>
+        <Col className="vertical" xs={1} md={1} lg={1}>{carrier}</Col>
+        <Col className="vertical" xs={1} md={1} lg={1}>{battleship}</Col>
+        <Col className="vertical" xs={1} md={1} lg={1}>{cruiser}</Col>
+        <Col className="vertical" xs={1} md={1} lg={1}>{submarine}</Col>
+        <Col className="vertical" xs={1} md={1} lg={1}>{destroyer}</Col>
       </Row>
     </Grid>
   ) :
