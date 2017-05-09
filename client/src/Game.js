@@ -329,7 +329,44 @@ class Game extends Component {
 
   // reverts state back in time to a specific move number
   jumpTo(step) {
-    this.setState({stepNumber: step});
+    const history = this.state.history.slice(0, step + 1);
+    const current = history[history.length - 1];
+    const squares = current.squares.slice();
+    const sunk = current.sunk.slice();
+    let allShips = current.allShips;
+    let won = current.won;
+    let allShipsPlaced = current.allShipsPlaced;
+    let carrierPlaced = current.shipPlaced.carrier;
+    let battleshipPlaced = current.shipPlaced.battleship;
+    let cruiserPlaced = current.shipPlaced.cruiser;
+    let submarinePlaced = current.shipPlaced.submarine;
+    let destroyerPlaced = current.shipPlaced.destroyer;
+    this.setState({stepNumber: step}, () => {
+      axios.post('/save-game', {board: squares, sunk: sunk})
+      .then((response) => {
+        this.setState({
+          history: history.concat([{
+            msg: current.msg,
+            won: won,
+            sunk: response.data.sunk,
+            squares: response.data.board,
+            allShipsPlaced: allShipsPlaced,
+            allShips: allShips,
+            shipPlaced: {
+              carrier: carrierPlaced,
+              battleship: battleshipPlaced,
+              cruiser: cruiserPlaced,
+              submarine: submarinePlaced,
+              destroyer: destroyerPlaced
+            }
+          }]),
+          stepNumber: step,
+        });
+      })
+      .catch((error) => {
+        console.log(error);
+      })
+    });
   }
 
   // reinitialize app and restart game
