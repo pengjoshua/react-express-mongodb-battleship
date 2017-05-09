@@ -442,7 +442,7 @@ class Game extends Component {
     } else if (!current.allShipsPlaced && !current.won) {
       startButton = (
         <div className="placeships">
-          <p>Battleship will automatically start when all ships placed on the board</p>
+          <p>Battleship will automatically start when all ships are placed on the board</p>
         </div>
       );
     } else if (current.won) {
