@@ -20,7 +20,7 @@ Please unit test your code and make sure all of your tests pass before submittin
 ## Battleship
 
 ##### A single player battleship game with a full featured API and move history made with React, Express, and MongoDB. Complete with Mocha/Chai unit tests and Selenium Webdriver end-to-end tests.  
-  
+
 I created a single player battleship game according to the specifications above. I did not use the provided template, but instead used my own. I made the frontend client with React using create-react-app to create a starting scaffold and React-Bootstrap for UI and styling. I built the backend API with Node using the Express framework and persisted state and data with a MongoDB database. I created unit tests with Mocha and Chai and end-to-end tests with Selenium Webdriver.
 
 ## Technology
@@ -125,7 +125,7 @@ When you have won, you can click the restart button that pops up to reinitialize
 
 ### Testing  
 
-Run Mocha and Chai tests by running `npm test` from the root of the project in a terminal window. The tests are located in the `mocha/test.js` file. There are multiple unit tests are for each of the following API endpoints.
+Before running unit tests, make sure your MongoDB database is running (run `mongod` in a terminal window). Run Mocha and Chai tests by running `npm test` from the root of the project in a terminal window. The tests are located in the `mocha/test.js` file. There are multiple unit tests are for each of the following API endpoints.
 
 - `POST /create-board`
 - `POST /create-game`
@@ -141,14 +141,15 @@ Selenium testing can provide inconsistent results depending on your system load 
 
 - To get started, run `npm install` from the root of the project
 - Additionally, run `npm install` from both the `client` folder and `server` folder
+- Install `nodemon` for instant reloading by running `npm i -g nodemon`
 - In a new terminal window, run `mongod` to run your MongoDB database
-- To start the server and simultaneously start the client, run `npm start`
+- To start the server and simultaneously start the client, run `npm start` in the root directory
     - Open a browser and navigate to [http://localhost:3000](http://localhost:3000)
-    - To stop the server with, hit `ctrl+c` in the terminal window
+    - (To stop the server, hit `ctrl+c` in the terminal window)
 - To run the Mocha/Chai unit tests, run `npm test`
-    - Stop the server before running tests, server cannot running at the same time
+    - (Stop the server before running tests, server cannot be running at the same time)
 - To run the Selenium Webdriver end-to-end tests, run `npm run selenium`, this will open up a new Google Chrome browser window
-    - Stop the server before running tests, server cannot running at the same time
+    - (Stop the server before running tests, server cannot be running at the same time)
 
 ## Images
 

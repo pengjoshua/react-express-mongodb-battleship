@@ -377,23 +377,23 @@ class Game extends Component {
     const current = history[this.state.stepNumber];
     let phase;
     if (current.allShipsPlaced && !current.won) {
-      phase = <div className="shootships"><h5>Take shots to sink ships!</h5></div>;
+      phase = <div className="shootships"><h5 className="hit-label">Take shots to sink ships!</h5></div>;
     } else if (!current.allShipsPlaced && !current.won) {
       phase = (
         <div>
-          <h5>Place ships on board</h5>
+          <h5 className="sunk-label">Place ships on board</h5>
           <p>Place ships by their topmost (vertical) or leftmost (horizontal) cell</p>
         </div>
       );
-    } else if (current.won) phase = <div className="congrats"><h5>Congratulations! You have sunk all the ships!</h5></div>;
+    } else if (current.won) phase = <div className="congrats"><h5 className="won-label">Congratulations! You sank all the ships!</h5></div>;
 
     let orientation = (this.state.vertical && !current.allShipsPlaced) ?
       <div>
-        <h5>Ship orientation: <strong>vertical</strong></h5>
+        <h5 className="miss-label">Ship orientation: <strong>vertical</strong></h5>
         <p>Click ship to select ship and toggle orientation</p>
       </div> :
       <div>
-        <h5>Ship orientation: <strong>horizontal</strong></h5>
+        <h5 className="miss-label">Ship orientation: <strong>horizontal</strong></h5>
         <p>Click ship to select ship and toggle orientation</p>
       </div>;
 
